@@ -1,0 +1,35 @@
+body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chonky-chonkyRoot {
+  font-weight: 500;
+}
+
+video {
+  object-fit: fill;
+}
+
+.plyr {
+  border-radius: 8px;
+}
+
+pre::-webkit-scrollbar {
+  background: transparent;
+  width: 10px;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: white;
+  border-radius: 8px;
+  border-width: '1px 1px 1px 6px',
+}
+
+pre::-webkit-scrollbar-corner {
+  background: transparent;
+}
