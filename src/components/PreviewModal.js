@@ -163,7 +163,8 @@ export default memo(function PreviewModal({ modalState, setModalState }) {
                                 display: 'inline-flex', alignItems: 'center', gap: '1rem', position: 'absolute',
                                 right: '1rem'
                             }}>
-                                <IconButton component={Link} href={videoUrl} color="inherit" edge="start">
+                                <IconButton component={Link} target="_blank"
+                                    rel="noopener noreferrer" href={videoUrl} color="inherit" edge="start">
                                     <FileDownloadOutlinedIcon />
                                 </IconButton>
                                 <IconButton color="inherit" edge="start">
