@@ -17,9 +17,6 @@ import { useRouter } from 'next/router';
 import { Tooltip, Grid, Box } from "@mui/material";
 import RestartIcon from '@mui/icons-material/RefreshOutlined';
 import AccountMenu from './AccountMenu';
-import { useSession } from '@/hooks/useAuth';
-import { allowedPaths } from '@/utils/common';
-
 
 const PREFIX = 'AppBar';
 
