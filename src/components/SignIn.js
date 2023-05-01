@@ -8,6 +8,7 @@ import { MuiTelInput, matchIsValidTel } from "mui-tel-input";
 import { Controller, useForm } from "react-hook-form";
 import { FormControlLabel, Checkbox, Box, TextField } from '@mui/material'
 import http from "@/utils/http";
+import { useSession } from "@/hooks/useAuth";
 
 export default function SignIn() {
 
@@ -27,6 +28,8 @@ export default function SignIn() {
     });
 
     const [step, setStep] = useState(0)
+
+    const { refetch } = useSession()
 
     async function onSubmit(data) {
         if (step === 0) {
@@ -57,6 +60,7 @@ export default function SignIn() {
                             formState.phone_code_hash, "phone_code": data.phone_code
                     })).data
 
+                await refetch()
                 router.replace("/my-drive")
             }
             catch (error) {

@@ -29,5 +29,5 @@ export function useSession({
       Router.replace(redirectTo)
     },
   })
-  return { session: query.data, loading: query.status === "loading" }
+  return { session: query.data, loading: query.status === "loading", refetch: query.refetch }
 }
