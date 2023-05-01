@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import Loader from "@/components/Loader";
-import { useRouter } from "next/router";
+import withAuth from "@/components/Auth";
 
 const MyFileBrowser = dynamic(() => import("@/components/MyFileBrowser"), {
     ssr: false,
@@ -8,16 +8,7 @@ const MyFileBrowser = dynamic(() => import("@/components/MyFileBrowser"), {
 });
 
 function FileBrowser() {
-
-    const router = useRouter()
-
-    const { asPath, pathname } = router
-
-    if (asPath === pathname) return null
-
     return <MyFileBrowser />
 }
 
-FileBrowser.auth = true;
-
-export default FileBrowser
+export default withAuth(FileBrowser)

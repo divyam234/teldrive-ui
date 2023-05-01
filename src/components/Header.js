@@ -72,7 +72,7 @@ const StyledAppBar = styled(AppBar)((
   },
 }));
 
-export default function Header({ onDrawerToggle }) {
+export default function Header({ onDrawerToggle, session }) {
 
   const [query, setQuery] = useState('')
 
@@ -84,9 +84,7 @@ export default function Header({ onDrawerToggle }) {
 
   const { path } = router.query
 
-  const { asPath, pathname } = router
-
-  const [session, loading] = useSession();
+  const { asPath } = router
 
   const { toggleThemeMode, resetThemeMode } = useContext(ThemeModeContext);
 
@@ -132,13 +130,15 @@ export default function Header({ onDrawerToggle }) {
       color='default' position="sticky">
       <Toolbar>
         <Grid container spacing={1} alignItems="center">
-          <Grid item sx={{ display: { md: 'none', sm: 'block' } }}>
-            <IconButton color="inherit" edge="start" onClick={onDrawerToggle}>
-              <MenuIcon />
-            </IconButton>
-          </Grid>
+          {session &&
+            <Grid item sx={{ display: { md: 'none', sm: 'block' } }}>
+              <IconButton color="inherit" edge="start" onClick={onDrawerToggle}>
+                <MenuIcon />
+              </IconButton>
+            </Grid>
+          }
           <Grid item xs sx={{ display: 'flex', alignItems: 'baseline' }}>
-            {allowedPaths.find((path) => path === pathname) && (
+            {session && (
               <Box className={classes.search}>
                 <div className={classes.searchIcon}>
                   <SearchIcon />
@@ -187,7 +187,7 @@ export default function Header({ onDrawerToggle }) {
             </Tooltip>
           </Grid>
           <Grid item>
-            <AccountMenu  router={router} session={session} />
+            <AccountMenu router={router} session={session} />
           </Grid>
         </Grid>
       </Toolbar>

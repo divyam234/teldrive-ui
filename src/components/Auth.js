@@ -1,22 +1,21 @@
 import { useRouter } from "next/router";
-import { useEffect } from "react";
 import { useSession } from "@/hooks/useAuth";
 
-export default function Auth({ children }) {
-  const router = useRouter();
+export default function withAuth(Component) {
 
-  const [session, loading] = useSession();
+  return function AuthCOmponent() {
 
-  const isUser = !!session?.username;
+    const router = useRouter()
 
-  if (loading) null;
+    const { asPath, pathname } = router
 
-  useEffect(() => {
-    if (!isUser && !loading) router.replace("/login");
-  }, [isUser, loading, router]);
+    const { session } = useSession();
 
-  if (isUser) {
-    return children;
+    if (session)
+      return <Component />
+
+    else if (!session || (asPath === pathname))
+      return null
   }
-  return null;
+
 }

@@ -8,15 +8,12 @@ import { MuiTelInput, matchIsValidTel } from "mui-tel-input";
 import { Controller, useForm } from "react-hook-form";
 import { FormControlLabel, Checkbox, Box, TextField } from '@mui/material'
 import http from "@/utils/http";
-import { useSession } from "@/hooks/useAuth";
 
 export default function SignIn() {
 
     const [isLoading, setLoading] = useState(false);
 
     const router = useRouter();
-
-    const [session, loading] = useSession();
 
     const [formState, setFormState] = useState({
         phone_code_hash: '',
@@ -71,15 +68,15 @@ export default function SignIn() {
         }
     }
 
-    const isUser = !!session?.username;
+    //const isUser = !!session?.username;
 
-    useEffect(() => {
-        if (loading) return;
-        if (isUser) router.replace("/my-drive");
-    }, [isUser, router, loading]);
+    // useEffect(() => {
+    //     if (loading) return;
+    //     if (isUser) router.replace("/my-drive");
+    // }, [isUser, router, loading]);
 
 
-    if (isUser || loading) return null
+    // if (isUser || loading) return null
 
     return (
         <Container component="main" maxWidth="sm">

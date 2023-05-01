@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import Loader from "@/components/Loader";
+import withAuth from "@/components/Auth";
 
 const VideoPreview = dynamic(() => import("@/components/previews/VideoPreview.js"), {
     ssr: false,
@@ -10,6 +11,4 @@ function Viewer() {
     return <VideoPreview />
 }
 
-Viewer.auth = true;
-
-export default Viewer
+export default withAuth(Viewer)
