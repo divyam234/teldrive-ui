@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^13.2.4",
+    "@svgr/webpack": "^7.0.0",
     "@welldone-software/why-did-you-render": "^7.0.1",
     "eslint": "8.37.0",
     "eslint-config-next": "13.2.4",

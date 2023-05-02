@@ -17,6 +17,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Grow from '@mui/material/Grow';
 import { getServerAddress } from "@/utils/common";
 import { useRouter } from "next/router";
+import TelegramIcon from "./TelegramIcon";
 
 const apiCredentials = {
     apiId: Number(process.env.NEXT_PUBLIC_API_ID),
@@ -47,10 +48,10 @@ export default function SignIn() {
     const [isLoading, setLoading] = useState(false);
 
     const [formState, setFormState] = useState({
-        phone_code_hash: '',
-        phone_code: '',
-        phone_number: '',
-        remember: false
+        phoneCodeHash: '',
+        phoneCode: '',
+        phoneNumber: '',
+        remember: true
     })
 
     const { control, handleSubmit } = useForm({
@@ -71,19 +72,17 @@ export default function SignIn() {
 
     const router = useRouter()
 
-    async function onSubmit(data) {
+    async function onSubmit({ phoneNumber, remember, phoneCode }) {
 
         const client = clientRef.current
 
         if (step === 0) {
             setLoading(true);
             try {
-                const result = await client.sendCode(apiCredentials, data.phone_no);
+                const { phoneCodeHash } = await client.sendCode(apiCredentials, phoneNumber);
                 setFormState(prev => ({
-                    ...prev, phone_code_hash: result.phoneCodeHash,
-                    phone_no: data.phone_no, remember: data.remember
+                    ...prev, phoneCodeHash, phoneNumber, remember
                 }))
-
                 setStep(1)
             }
             catch (error) {
@@ -99,9 +98,9 @@ export default function SignIn() {
             try {
                 let user = await client.invoke(
                     new Api.auth.SignIn({
-                        phoneNumber: formState.phone_no,
-                        phoneCodeHash: formState.phone_code_hash,
-                        phoneCode: data.phone_code,
+                        phoneNumber: formState.phoneNumber,
+                        phoneCodeHash: formState.phoneCodeHash,
+                        phoneCode
                     })
                 );
                 await postLogin(client.session, user.user, refetch, router)
@@ -159,16 +158,6 @@ export default function SignIn() {
             loginWithQr()
     }, [loginType, refetch, router, isConnected])
 
-    //const isUser = !!session?.username;
-
-    // useEffect(() => {
-    //     if (loading) return;
-    //     if (isUser) router.replace("/my-drive");
-    // }, [isUser, router, loading]);
-
-
-    // if (isUser || loading) return null
-
     return (
         <Container component="main" maxWidth="sm">
             <Paper
@@ -176,7 +165,7 @@ export default function SignIn() {
                     borderRadius: 2,
                     px: 4,
                     py: 6,
-                    marginTop: 8,
+                    marginTop: 3,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
@@ -190,10 +179,16 @@ export default function SignIn() {
                     <Box component="form" noValidate autoComplete="off"
                         onSubmit={!isLoading ? handleSubmit(onSubmit) : null}
                         sx={{ width: '90%', gap: '1rem', display: 'flex', flexDirection: 'column' }}>
+                        <Grow in={true}>
+                            <Box sx={{ width: 150, height: 150, position: 'relative', margin: 'auto' }}>
+                                <TelegramIcon>
+                                </TelegramIcon>
+                            </Box>
+                        </Grow>
                         {step === 0 &&
                             <>
                                 <Controller
-                                    name="phone_no"
+                                    name="phoneNumber"
                                     control={control}
                                     rules={{ validate: matchIsValidTel }}
                                     render={({ field, fieldState }) => (
@@ -201,6 +196,7 @@ export default function SignIn() {
                                             {...field}
                                             defaultCountry="IN"
                                             fullWidth
+                                            required
                                             label="PhoneNo"
                                             helperText={fieldState.invalid ? "Tel is invalid" : ""}
                                             error={fieldState.invalid}
@@ -223,7 +219,7 @@ export default function SignIn() {
                         {step === 1 &&
                             <>
                                 <Controller
-                                    name="phone_code"
+                                    name="phoneCode"
                                     control={control}
                                     rules={{ required: true }}
                                     render={({ field, fieldState: { error } }) => (
@@ -266,7 +262,7 @@ export default function SignIn() {
                     <Box sx={{ width: '90%', gap: '1rem', display: 'flex', flexDirection: 'column' }}>
                         <Box sx={{
                             height: 256, width: 256, margin: "0 auto",
-                            maxWidth: 256, width: "100%"
+                            maxWidth: 256, width: "100%", position: 'relative'
                         }}>
                             {qrCode ?
                                 <Grow in={true}>
@@ -275,7 +271,8 @@ export default function SignIn() {
                                         style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                                         value={qrCode}
                                         viewBox={`0 0 256 256`}
-                                    /></Grow> :
+                                    />
+                                </Grow> :
                                 <Box sx={{
                                     position: "absolute",
                                     top: "50%",
