@@ -16,22 +16,11 @@ import QRCode from 'react-qr-code'
 import { LogLevel } from 'telegram/extensions/Logger'
 import CircularProgress from '@mui/material/CircularProgress';
 import Grow from '@mui/material/Grow';
+import { getServerAddress } from "@/utils/common";
 
 const apiCredentials = {
     apiId: Number(process.env.NEXT_PUBLIC_API_ID),
     apiHash: process.env.NEXT_PUBLIC_API_HASH
-}
-
-const datacenters = {
-    1: "149.154.175.53",
-    2: "149.154.167.51",
-    3: "149.154.175.100",
-    4: "149.154.167.91",
-    5: "91.108.56.130",
-}
-
-export function getServerAddress(dcId) {
-    return datacenters[dcId]
 }
 
 function getSession(session, user) {
@@ -126,7 +115,8 @@ export default function SignIn() {
     useEffect(() => {
         if (!clientRef.current) {
             const session = new StringSession('')
-            session.setDC(5, getServerAddress(5), 80)
+            const { id, ipAddress, port } = getServerAddress(5)
+            session.setDC(id, ipAddress, port)
             clientRef.current = new TelegramClient(session,
                 apiCredentials.apiId, apiCredentials.apiHash,
                 {
