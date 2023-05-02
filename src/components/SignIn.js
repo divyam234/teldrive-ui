@@ -2,7 +2,6 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
-import { Router } from "next/router";
 import { useState, useEffect, useRef } from "react";
 import { MuiTelInput, matchIsValidTel } from "mui-tel-input";
 import { Controller, useForm } from "react-hook-form";
@@ -17,6 +16,7 @@ import { LogLevel } from 'telegram/extensions/Logger'
 import CircularProgress from '@mui/material/CircularProgress';
 import Grow from '@mui/material/Grow';
 import { getServerAddress } from "@/utils/common";
+import { useRouter } from "next/router";
 
 const apiCredentials = {
     apiId: Number(process.env.NEXT_PUBLIC_API_ID),
@@ -35,11 +35,11 @@ function getSession(session, user) {
 
 }
 
-async function postLogin(session, user, refetch) {
+async function postLogin(session, user, refetch, router) {
     let payload = getSession(session, user)
     let res = (await http.post('/api/auth/login', payload)).data
     await refetch()
-    Router.replace("/my-drive")
+    router.replace("/my-drive")
 }
 
 export default function SignIn() {
@@ -68,6 +68,8 @@ export default function SignIn() {
     const { refetch } = useSession()
 
     const clientRef = useRef(null)
+
+    const router = useRouter()
 
     async function onSubmit(data) {
 
@@ -102,7 +104,7 @@ export default function SignIn() {
                         phoneCode: data.phone_code,
                     })
                 );
-                await postLogin(client.session, user.user, refetch)
+                await postLogin(client.session, user.user, refetch, router)
             }
             catch (error) {
             }
@@ -151,11 +153,11 @@ export default function SignIn() {
                     }
                 }
             );
-            await postLogin(client.session, user, refetch)
+            await postLogin(client.session, user, refetch, router)
         }
         if (loginType === 'qr' && isConnected)
             loginWithQr()
-    }, [loginType, refetch, isConnected])
+    }, [loginType, refetch, router, isConnected])
 
     //const isUser = !!session?.username;
 
