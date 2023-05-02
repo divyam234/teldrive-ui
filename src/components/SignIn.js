@@ -2,19 +2,60 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
-import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { Router } from "next/router";
+import { useState, useEffect, useRef } from "react";
 import { MuiTelInput, matchIsValidTel } from "mui-tel-input";
 import { Controller, useForm } from "react-hook-form";
 import { FormControlLabel, Checkbox, Box, TextField } from '@mui/material'
 import http from "@/utils/http";
 import { useSession } from "@/hooks/useAuth";
+import { TelegramClient, Api, Logger } from "telegram";
+import { StringSession } from "telegram/sessions";
+import base64url from 'base64url'
+import QRCode from 'react-qr-code'
+import { LogLevel } from 'telegram/extensions/Logger'
+import CircularProgress from '@mui/material/CircularProgress';
+import Grow from '@mui/material/Grow';
+
+const apiCredentials = {
+    apiId: Number(process.env.NEXT_PUBLIC_API_ID),
+    apiHash: process.env.NEXT_PUBLIC_API_HASH
+}
+
+const datacenters = {
+    1: "149.154.175.53",
+    2: "149.154.167.51",
+    3: "149.154.175.100",
+    4: "149.154.167.91",
+    5: "91.108.56.130",
+}
+
+export function getServerAddress(dcId) {
+    return datacenters[dcId]
+}
+
+function getSession(session, user) {
+    const dc_id = session.dcId;
+    const auth_key = session.getAuthKey()?.getKey()?.toString('hex');
+
+    return {
+        dc_id, auth_key, tg_id: Number(user.id), bot: user.bot,
+        username: user.username, name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        is_premium: user.premium
+    }
+
+}
+
+async function postLogin(session, user, refetch) {
+    let payload = getSession(session, user)
+    let res = (await http.post('/api/auth/login', payload)).data
+    await refetch()
+    Router.replace("/my-drive")
+}
 
 export default function SignIn() {
 
     const [isLoading, setLoading] = useState(false);
-
-    const router = useRouter();
 
     const [formState, setFormState] = useState({
         phone_code_hash: '',
@@ -29,16 +70,27 @@ export default function SignIn() {
 
     const [step, setStep] = useState(0)
 
+    const [loginType, setLoginType] = useState('qr')
+
+    const [isConnected, setIsConnected] = useState(false)
+
+    const [qrCode, setqrCode] = useState('')
+
     const { refetch } = useSession()
 
+    const clientRef = useRef(null)
+
     async function onSubmit(data) {
+
+        const client = clientRef.current
+
         if (step === 0) {
             setLoading(true);
             try {
-                let res = (await http.post('/api/auth/send_code', { "phone_number": data.phone_no })).data
+                const result = await client.sendCode(apiCredentials, data.phone_no);
                 setFormState(prev => ({
-                    ...prev, phone_code_hash: res.phone_code_hash,
-                    phone_number: data.phone_number, remember: data.remember
+                    ...prev, phone_code_hash: result.phoneCodeHash,
+                    phone_no: data.phone_no, remember: data.remember
                 }))
 
                 setStep(1)
@@ -54,23 +106,66 @@ export default function SignIn() {
         if (step === 1) {
             setLoading(true);
             try {
-                let res = (await http.post('/api/auth/login',
-                    {
-                        "phone_number": data.phone_no, "phone_code_hash":
-                            formState.phone_code_hash, "phone_code": data.phone_code
-                    })).data
-
-                await refetch()
-                router.replace("/my-drive")
+                let user = await client.invoke(
+                    new Api.auth.SignIn({
+                        phoneNumber: formState.phone_no,
+                        phoneCodeHash: formState.phone_code_hash,
+                        phoneCode: data.phone_code,
+                    })
+                );
+                await postLogin(client.session, user.user, refetch)
             }
             catch (error) {
-                //createToast(error.message, "error")
             }
             finally {
                 setLoading(false)
             }
         }
     }
+
+    useEffect(() => {
+        if (!clientRef.current) {
+            const session = new StringSession('')
+            session.setDC(5, getServerAddress(5), 80)
+            clientRef.current = new TelegramClient(session,
+                apiCredentials.apiId, apiCredentials.apiHash,
+                {
+                    baseLogger: new Logger(LogLevel.NONE),
+                    deviceModel: 'Desktop',
+                    systemVersion: 'Windows 10',
+                    appVersion: '4.8.1 x64',
+                    langCode: 'en-US',
+                })
+            clientRef.current.connect().then(() => setIsConnected(true))
+        }
+        return () => {
+            clientRef.current?.destroy()
+        }
+    }, [])
+
+    useEffect(() => {
+        const client = clientRef.current
+        async function loginWithQr() {
+            const user = await client.signInUserWithQrCode(apiCredentials,
+                {
+                    onError: async function (p1) {
+                        console.log("error", p1);
+                        return true;
+                    },
+                    qrCode: async (code) => {
+                        let qr = `tg://login?token=${base64url(code.token)}`
+                        setqrCode(qr)
+                    },
+                    password: async (hint) => {
+                        return "1111";
+                    }
+                }
+            );
+            await postLogin(client.session, user, refetch)
+        }
+        if (loginType === 'qr' && isConnected)
+            loginWithQr()
+    }, [loginType, refetch, isConnected])
 
     //const isUser = !!session?.username;
 
@@ -97,72 +192,121 @@ export default function SignIn() {
                 }}
             >
                 <Typography component="h1" variant="h5">
-                    Sign in
+                    {loginType == 'qr' ? 'Login By QR code' : 'Login By Phone Number '}
                 </Typography>
-                <Box component="form" noValidate autoComplete="off"
-                    onSubmit={!isLoading ? handleSubmit(onSubmit) : null}
-                    sx={{ width: '90%', gap: '1rem', display: 'flex', flexDirection: 'column' }}>
-                    {step === 0 &&
-                        <>
-                            <Controller
-                                name="phone_no"
-                                control={control}
-                                rules={{ validate: matchIsValidTel }}
-                                render={({ field, fieldState }) => (
-                                    <MuiTelInput
-                                        {...field}
-                                        defaultCountry="IN"
-                                        fullWidth
-                                        label="PhoneNo"
-                                        helperText={fieldState.invalid ? "Tel is invalid" : ""}
-                                        error={fieldState.invalid}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name="remember"
-                                control={control}
-                                render={({ field }) => (
-                                    <FormControlLabel
-                                        control={<Checkbox {...field} checked={!!field.value}
-                                        />}
-                                        label="Keep me signed in"
-                                    />
-                                )}
-                            />
-                        </>
-                    }
-                    {step === 1 &&
-                        <>
-                            <Controller
-                                name="phone_code"
-                                control={control}
-                                rules={{ required: true }}
-                                render={({ field, fieldState: { error } }) => (
-                                    <TextField
-                                        {...field}
-                                        margin="normal"
-                                        required
-                                        fullWidth
-                                        error={!!error}
-                                        type="text"
-                                        label="PhoneCode"
-                                        helperText={error ? error.message : ""}
-                                    />
-                                )}
-                            />
-                        </>
-                    }
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="tonal"
-                        disabled={isLoading}
-                        sx={{ mt: 3, mb: 2 }}
-                    >
-                        {isLoading ? "Please Wait…" : step === 0 ? "Next" : "Login"}
-                    </Button>
-                </Box>
+                {loginType == 'phone' &&
+                    <Box component="form" noValidate autoComplete="off"
+                        onSubmit={!isLoading ? handleSubmit(onSubmit) : null}
+                        sx={{ width: '90%', gap: '1rem', display: 'flex', flexDirection: 'column' }}>
+                        {step === 0 &&
+                            <>
+                                <Controller
+                                    name="phone_no"
+                                    control={control}
+                                    rules={{ validate: matchIsValidTel }}
+                                    render={({ field, fieldState }) => (
+                                        <MuiTelInput
+                                            {...field}
+                                            defaultCountry="IN"
+                                            fullWidth
+                                            label="PhoneNo"
+                                            helperText={fieldState.invalid ? "Tel is invalid" : ""}
+                                            error={fieldState.invalid}
+                                        />
+                                    )}
+                                />
+                                <Controller
+                                    name="remember"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <FormControlLabel
+                                            control={<Checkbox {...field} checked={!!field.value}
+                                            />}
+                                            label="Keep me signed in"
+                                        />
+                                    )}
+                                />
+                            </>
+                        }
+                        {step === 1 &&
+                            <>
+                                <Controller
+                                    name="phone_code"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field, fieldState: { error } }) => (
+                                        <TextField
+                                            {...field}
+                                            margin="normal"
+                                            required
+                                            fullWidth
+                                            error={!!error}
+                                            type="text"
+                                            label="PhoneCode"
+                                            helperText={error ? error.message : ""}
+                                        />
+                                    )}
+                                />
+                            </>
+                        }
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="tonal"
+                            disabled={isLoading}
+                            sx={{ mt: 3, mb: 2 }}
+                        >
+                            {isLoading ? "Please Wait…" : step === 0 ? "Next" : "Login"}
+                        </Button>
+
+                        <Button
+                            onClick={() => setLoginType('qr')}
+                            fullWidth
+                            variant="tonal"
+                            sx={{ mb: 2 }}
+                        >
+                            Login By QR Code
+                        </Button>
+                    </Box>
+                }
+
+                {loginType == 'qr' &&
+                    <Box sx={{ width: '90%', gap: '1rem', display: 'flex', flexDirection: 'column' }}>
+                        <Box sx={{
+                            height: 256, width: 256, margin: "0 auto",
+                            maxWidth: 256, width: "100%"
+                        }}>
+                            {qrCode ?
+                                <Grow in={true}>
+                                    <QRCode
+                                        size={256}
+                                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                        value={qrCode}
+                                        viewBox={`0 0 256 256`}
+                                    /></Grow> :
+                                <Box sx={{
+                                    position: "absolute",
+                                    top: "50%",
+                                    left: "50%",
+                                    marginRight: "-50%",
+                                    transform: "translate(-50%,-50%)"
+                                }}>
+                                    <CircularProgress />
+                                </Box>
+                            }
+                        </Box>
+
+                        <Button
+                            onClick={() => setLoginType('phone')}
+                            fullWidth
+                            variant="tonal"
+                            sx={{ mt: 3, mb: 2 }}
+                        >
+                            Login By Phone Number
+                        </Button>
+                    </Box>
+                }
+
             </Paper>
         </Container>
     );
