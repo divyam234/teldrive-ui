@@ -12,8 +12,8 @@ http.interceptors.request.use(function (config) {
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method.toUpperCase())) {
     const csrf_token = getCookie('csrf_access_token')
     if (csrf_token) config.headers['X-CSRF-Token'] = csrf_token
-    return config;
   }
+  return config;
 });
 
 export default http
