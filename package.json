@@ -15,6 +15,7 @@
     "@mui/x-date-pickers": "^6.0.4",
     "@tanstack/react-query": "latest",
     "@tanstack/react-query-devtools": "^4.29.0",
+    "axios": "^1.4.0",
     "base64url": "^3.0.1",
     "firebase": "^9.19.1",
     "lodash.debounce": "^4.0.8",
@@ -31,7 +32,6 @@
     "react-reader": "^1.2.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-use": "^17.4.0",
-    "redaxios": "^0.5.1",
     "telegram": "^2.16.3"
   },
   "devDependencies": {
