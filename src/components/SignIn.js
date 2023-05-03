@@ -11,13 +11,13 @@ import { useSession } from "@/hooks/useAuth";
 import { TelegramClient, Api, Logger } from "telegram";
 import { StringSession } from "telegram/sessions";
 import base64url from 'base64url'
-import QRCode from 'react-qr-code'
 import { LogLevel } from 'telegram/extensions/Logger'
 import CircularProgress from '@mui/material/CircularProgress';
 import Grow from '@mui/material/Grow';
 import { getServerAddress } from "@/utils/common";
 import { useRouter } from "next/router";
 import TelegramIcon from "./TelegramIcon";
+import QrCode from "./QRCode";
 
 const apiCredentials = {
     apiId: Number(process.env.NEXT_PUBLIC_API_ID),
@@ -261,18 +261,12 @@ export default function SignIn() {
                 {loginType == 'qr' &&
                     <Box sx={{ width: '90%', gap: '1rem', display: 'flex', flexDirection: 'column' }}>
                         <Box sx={{
-                            height: 256, width: 256, margin: "0 auto",
-                            maxWidth: 256, width: "100%", position: 'relative'
+                            height: 280, width: 280, margin: "0 auto",
+                            maxWidth: 280, position: 'relative'
                         }}>
                             {qrCode ?
-                                <Grow in={true}>
-                                    <QRCode
-                                        size={256}
-                                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                        value={qrCode}
-                                        viewBox={`0 0 256 256`}
-                                    />
-                                </Grow> :
+                                <QrCode qrCode={qrCode} />
+                                :
                                 <Box sx={{
                                     position: "absolute",
                                     top: "50%",
