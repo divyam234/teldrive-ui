@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import QRCodeStyling from "qr-code-styling";
 import { Box, Grow, useTheme } from "@mui/material";
 import textToSvgURL from "@/utils/common";
+import { useAsyncMemo } from "use-async-memo"
 
 const QR_SIZE = 280
 
@@ -13,43 +14,39 @@ export default function QrCode({ qrCode }) {
 
     const [isQrMounted, setisQrMounted] = useState(false)
 
-    const [qrStyle, setQrStyle] = useState('')
-
-    useEffect(() => {
-        fetch('/img/icons/icon.svg')
+    const qrStyle = useAsyncMemo(async () => {
+        let image = await fetch('/img/icons/icon.svg')
             .then((res) => res.text())
             .then((text) => {
                 text = text.replace(/(circle.*)(fill=")(.*)(")/, `$1 $2${theme.palette.primary.main}$4`)
                 text = text.replace(/(path.*)(fill=")(.*)(")/, `$1 $2${theme.palette.background.paper}$4`)
                 return textToSvgURL(text);
-            }).then((image) => {
-                setQrStyle(new QRCodeStyling({
-                    width: QR_SIZE,
-                    height: QR_SIZE,
-                    image: image,
-                    margin: 10,
-                    type: 'svg',
-                    dotsOptions: {
-                        color: theme.palette.text.primary,
-                        type: 'rounded',
-                    },
-                    cornersSquareOptions: {
-                        type: 'extra-rounded',
-                    },
-                    imageOptions: {
-                        hideBackgroundDots: true,
-                        imageSize: 0.4,
-                        margin: 2,
-                    },
-                    backgroundOptions: {
-                        color: theme.palette.background.paper
-                    },
-                    qrOptions: {
-                        errorCorrectionLevel: 'M',
-                    },
-                }))
             })
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        return new QRCodeStyling({
+            width: QR_SIZE,
+            height: QR_SIZE,
+            image,
+            margin: 10,
+            type: 'svg',
+            dotsOptions: {
+                color: theme.palette.text.primary,
+                type: 'rounded',
+            },
+            cornersSquareOptions: {
+                type: 'extra-rounded',
+            },
+            imageOptions: {
+                hideBackgroundDots: true,
+                imageSize: 0.4,
+                margin: 2,
+            },
+            backgroundOptions: {
+                color: theme.palette.background.paper
+            },
+            qrOptions: {
+                errorCorrectionLevel: 'M',
+            },
+        })
     }, [theme.palette])
 
     useEffect(() => {
@@ -57,7 +54,7 @@ export default function QrCode({ qrCode }) {
             qrStyle.append(ref.current);
             setisQrMounted(true)
         }
-    }, [qrStyle, isQrMounted]);
+    }, [qrStyle]);
 
     useEffect(() => {
         if (!qrCode) return;

@@ -18,6 +18,7 @@ import { isMobileDevice } from '@/utils/common'
 import { useRouter } from 'next/router'
 import PreviewModal from './PreviewModal'
 import FileModal from './FileModal'
+import Upload from './upload'
 
 const disableDefaultFileActions = [ChonkyActions.SortFilesByDate.id,
 ChonkyActions.SortFilesBySize.id]
@@ -146,7 +147,7 @@ const MyFileBrowser = () => {
           path={path} files={files} />
       }
 
-      {/* <Upload ref={uploadRef} /> */}
+      <Upload ref={uploadRef} />
     </Root>
   );
 }

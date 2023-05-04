@@ -14,15 +14,10 @@ import base64url from 'base64url'
 import { LogLevel } from 'telegram/extensions/Logger'
 import CircularProgress from '@mui/material/CircularProgress';
 import Grow from '@mui/material/Grow';
-import { getServerAddress } from "@/utils/common";
+import { apiCredentials, getServerAddress } from "@/utils/common";
 import { useRouter } from "next/router";
 import TelegramIcon from "./TelegramIcon";
 import QrCode from "./QRCode";
-
-const apiCredentials = {
-    apiId: Number(process.env.NEXT_PUBLIC_API_ID),
-    apiHash: process.env.NEXT_PUBLIC_API_HASH
-}
 
 function getSession(session, user) {
     const dc_id = session.dcId;
@@ -38,6 +33,8 @@ function getSession(session, user) {
 
 async function postLogin(session, user, refetch, router) {
     let payload = getSession(session, user)
+    const gramjs_session = session.save()
+    payload['gramjs_session'] = gramjs_session
     let res = (await http.post('/api/auth/login', payload)).data
     await refetch()
     router.replace("/my-drive")

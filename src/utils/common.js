@@ -109,3 +109,10 @@ export default function textToSvgURL(text) {
     reader.readAsDataURL(blob);
   });
 }
+
+export const apiCredentials = {
+  apiId: Number(process.env.NEXT_PUBLIC_API_ID),
+  apiHash: process.env.NEXT_PUBLIC_API_HASH
+}
+
+export const zeroPad = (num, places) => String(num).padStart(places, '0')

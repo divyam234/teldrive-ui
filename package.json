@@ -31,7 +31,8 @@
     "react-reader": "^1.2.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-use": "^17.4.0",
-    "telegram": "^2.16.3"
+    "telegram": "^2.16.3",
+    "use-async-memo": "^1.2.4"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^13.2.4",
