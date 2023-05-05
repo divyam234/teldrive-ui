@@ -24,8 +24,7 @@ export default withPWA(
 
       return config;
     },
-    output: 'standalone',
-    reactStrictMode: true,
+    reactStrictMode: false,
     experimental: {
       runtime: 'edge',
     },
