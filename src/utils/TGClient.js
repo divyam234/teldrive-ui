@@ -29,6 +29,6 @@ export class TGClient {
     }
 
     static async disconnect() {
-        if (this.client.connected) await this.client.destroy()
+        if (this.client?.connected) await this.client.destroy()
     }
 }

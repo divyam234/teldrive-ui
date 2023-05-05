@@ -25,24 +25,6 @@ export default withPWA(
       return config;
     },
     output: 'standalone',
-    reactStrictMode: true,
-    runtime: 'edge',
-    async redirects() {
-      return [
-        {
-          source: '/',
-          destination: '/my-drive',
-          permanent: true,
-        },
-      ]
-    },
-    async rewrites() {
-      return [
-        {
-          source: '/api/:path*',
-          destination: 'https://teldrive.bhunter.in/api/:path*',
-        },
-      ]
-    }
+    reactStrictMode: true
   })
 );
