@@ -9,7 +9,6 @@ const app = new Hono()
 
 app.basePath('/api')
 
-
 app.all('/*', async (c) => {
     const { method, headers, body, path } = c.req
     const address = `https://teldrive.bhunter.in${path}`;
