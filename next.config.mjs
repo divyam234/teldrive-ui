@@ -24,10 +24,9 @@ export default withPWA(
 
       return config;
     },
-    reactStrictMode: false,
-    experimental: {
-      runtime: 'edge',
-    },
+    output: 'standalone',
+    reactStrictMode: true,
+    runtime: 'edge',
     async redirects() {
       return [
         {
